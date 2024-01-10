@@ -2,7 +2,7 @@
 
 # sender_info = {
 #     "prabin@yopmail.com":{
-#         "password":"uhwt njqh lhhk rssl",
+#         "password":"",
 #         "total_email_sent":0,
 #         "today_date": datetime.now(),
 #         "name": "Prabin Pandey"

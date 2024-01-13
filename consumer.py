@@ -14,7 +14,8 @@ def callback(ch, method, properties, body):
             receipant = [v.get('email')]
             send_html_mail(receipant, name)
             time.sleep(2)
-    logging.mail_send_logger.info(f"[Successfull: ] Mail successfully sent.")
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+    logging.mail_send_logger.info(f"[ACKNOWLEDGED.........: ] Mail successfully sent.")
     time.sleep(1)
 
 # Establish a connection with RabbitMQ
@@ -25,7 +26,7 @@ channel = connection.channel()
 channel.queue_declare(queue='email_queue')
 
 # Set up the consumer
-channel.basic_consume(queue='email_queue', on_message_callback=callback, auto_ack=True)
+channel.basic_consume(queue='email_queue', on_message_callback=callback, auto_ack=False)
 
 logging.mail_send_logger.info('[Waiting: ] Waiting for messages. To exit press CTRL+C')
 channel.start_consuming()

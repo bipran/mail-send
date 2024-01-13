@@ -35,15 +35,30 @@ def read_xslx_file():
                 df.at[i, 'sender'] = sender_value
         except KeyError:
             df.at[i, 'sender'] = sender_value
-        # print(df['sender'].value_counts()[row['sender']])
-    # print(df)
-    sender_counts = df['sender']
-    print(sender_counts)
-    print(df['sender'].value_counts()[''])
-    df.to_csv('test.csv')
+    # sender_counts = df['sender']
+    df.to_csv('test.xlxx')
     return 
 
-# read_xslx_file()
+def chunk_and_save(input_csv, chunk_size, output_prefix):
+    # Read the CSV file into a DataFrame
+    df = pd.read_csv(input_csv)
+
+    # Get the total number of rows in the DataFrame
+    total_rows = df.shape[0]
+
+    # Calculate the number of chunks needed
+    num_chunks = (total_rows + chunk_size - 1) // chunk_size
+
+    # Split the DataFrame into chunks
+    chunks = [df.iloc[i*chunk_size:(i+1)*chunk_size] for i in range(num_chunks)]
+
+    # Save each chunk to a separate CSV file
+    for i, chunk in enumerate(chunks):
+        output_filename = f"csv_chunk/{output_prefix}_chunk_{i + 1}.csv"
+        chunk.to_csv(output_filename, index=False)
+        print(f"Chunk {i + 1} saved to {output_filename}")
+
+# chunk_and_save('/home/prabin/code_project/send_mail/test.csv', 10000,'new')
 
 class RabbitMq:
     """"""
@@ -71,4 +86,4 @@ class RabbitMq:
                 message = json.dumps(batch)
                 self.channel.basic_publish(exchange='', routing_key='email_queue', body=message)
 rabbitmq = RabbitMq()
-rabbitmq.load_data_to_producer()
+# rabbitmq.load_data_to_producer()

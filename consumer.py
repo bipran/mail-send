@@ -12,7 +12,7 @@ def callback(ch, method, properties, body):
         if 'Email' in v:
             name = v.get('First name')+" "+ v.get('Last name')
             receipant = [v.get('email')]
-            # send_html_mail(receipant, name)
+            send_html_mail(receipant, name)
             time.sleep(2)
     ch.basic_ack(delivery_tag=method.delivery_tag)
     # logging.mail_send_logger.info(f"[ACKNOWLEDGED.........: ] Mail successfully sent.")

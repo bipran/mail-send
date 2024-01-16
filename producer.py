@@ -6,25 +6,7 @@ import pandas as pd
 
 def read_xslx_file():
     df = pd.read_excel('path to xlxs file', engine='openpyxl')
-    senders = [
-        'rabee.tmg123@gmail.com',
-        'rabindra.tamang@codehimalaya.net',
-        'pascalrai66@gmail.com',
-        'pascal.rai@codehimalaya.net',
-        'dristi.sigdel@codehimalaya.net',
-        'sigdeldristi@gmail.com',
-        'medristee@gmail.com',
-        'np03a190166@heraldcollege.edu.np',
-        'sujan.neupane@codehimalaya.net',
-        'nirajkaranjeet.codehimalaya@gmail.com',
-        '018bscit023@sxc.edu.np',
-        'medristee1@gmail.com',
-        # new added value.
-        # 'np03a19016@heraldcollege.edu.np',
-        # 'sujan.neupane3@codehimalaya.net',
-        # 'nirajkaranjeet.codehimalaya3@gmail.com',
-        # '018bscit0234@sxc.edu.np'
-    ]
+    senders = []
     df['sender'] = ''
     for i, _ in df.iterrows():
         sender_value = senders[i % len(senders)]
@@ -42,6 +24,11 @@ def read_xslx_file():
 def chunk_and_save(input_csv, chunk_size, output_prefix):
     # Read the CSV file into a DataFrame
     df = pd.read_csv(input_csv)
+    # empty_salary_count = df['sender'].isna().sum()
+    df_removed = df[df['sender'].isnull()]
+    df = df[df['sender'].notnull()]
+    if df_removed.shape[0]>0:
+        df_removed.to_csv('path to/csv_chunk/csv_empty_sender_info.csv', index=False)
 
     # Get the total number of rows in the DataFrame
     total_rows = df.shape[0]
@@ -64,12 +51,13 @@ class RabbitMq:
     """"""
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
-    channel.queue_declare(queue='email_queue')
+    # channel.queue_declare(queue='email_queue')
     
-    def load_data_to_producer(self):
+    def load_data_to_producer_1(self, path):
         batch_size = 2
         batch = []
-        with open('path to csv file', 'r') as f:
+        self.channel.queue_declare(queue='email_queue_1')
+        with open(path, 'r') as f:
             reader = csv.DictReader(f)
             for row in reader:
                 batch.append(row)
@@ -77,13 +65,60 @@ class RabbitMq:
                     # Convert the batch to a JSON string
                     message = json.dumps(batch)
                     # Publish the batch to the queue
-                    self.channel.basic_publish(exchange='', routing_key='email_queue', body=message)
+                    self.channel.basic_publish(exchange='', routing_key='email_queue_1', body=message)
+                    # Clear the batch
+                    batch = []            
+            # Don't forget the last batch if it's not full
+            if batch:
+                message = json.dumps(batch)
+                self.channel.basic_publish(exchange='', routing_key='email_queue_1', body=message)
+
+    def load_data_to_producer_2(self, path):
+        batch_size = 2
+        batch = []
+        self.channel.queue_declare(queue='email_queue_2')
+        with open(path, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                batch.append(row)
+                if len(batch) == batch_size:
+                    # Convert the batch to a JSON string
+                    message = json.dumps(batch)
+                    # Publish the batch to the queue
+                    self.channel.basic_publish(exchange='', routing_key='email_queue_2', body=message)
                     # Clear the batch
                     batch = []
             
             # Don't forget the last batch if it's not full
             if batch:
                 message = json.dumps(batch)
-                self.channel.basic_publish(exchange='', routing_key='email_queue', body=message)
-rabbitmq = RabbitMq()
-# rabbitmq.load_data_to_producer()
+                self.channel.basic_publish(exchange='', routing_key='email_queue_2', body=message)
+
+    def load_data_to_producer_3(self, path):
+        batch_size = 2
+        batch = []
+        self.channel.queue_declare(queue='email_queue_3')
+        with open(path, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                batch.append(row)
+                if len(batch) == batch_size:
+                    # Convert the batch to a JSON string
+                    message = json.dumps(batch)
+                    # Publish the batch to the queue
+                    self.channel.basic_publish(exchange='', routing_key='email_queue_3', body=message)
+                    # Clear the batch
+                    batch = []
+            
+            # Don't forget the last batch if it's not full
+            if batch:
+                message = json.dumps(batch)
+                self.channel.basic_publish(exchange='', routing_key='email_queue_3', body=message)
+
+if __name__ == "__main__":
+    rabbitmq = RabbitMq()
+    
+    
+    rabbitmq.load_data_to_producer_1('path to/new_chunk_1.csv')
+    # rabbitmq.load_data_to_producer_2('path to/new_chunk_2.csv')
+    # rabbitmq.load_data_to_producer_3('path to/new_chunk_1.csv')
